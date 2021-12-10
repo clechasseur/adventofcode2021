@@ -63,4 +63,16 @@ class AdventOfCode2021 {
             assertEquals(22083, Day5.part2())
         }
     }
+
+    class Day6Puzzles {
+        @Test
+        fun `day 6, part 1`() {
+            assertEquals(386755, Day6.part1())
+        }
+
+        @Test
+        fun `day 6, part 2`() {
+            assertEquals(1732731810807L, Day6.part2())
+        }
+    }
 }
