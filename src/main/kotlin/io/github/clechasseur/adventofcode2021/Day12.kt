@@ -36,10 +36,7 @@ object Day12 {
 
     fun part1(): Int = paths(listOf("start"), false).count()
 
-    fun part2(): Int {
-        val p = paths(listOf("start"), true)
-        return p.count()
-    }
+    fun part2(): Int = paths(listOf("start"), true).count()
 
     private fun paths(soFar: List<String>, canVisitOneTwice: Boolean): List<List<String>> {
         if (soFar.last() == "end") {
