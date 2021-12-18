@@ -1,5 +1,6 @@
 package io.github.clechasseur.adventofcode2021
 
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -177,6 +178,19 @@ class AdventOfCode2021 {
         @Test
         fun `day 14, part 2`() {
             assertEquals(4110215602456L, Day14.part2())
+        }
+    }
+
+    class Day15Puzzles {
+        @Test
+        fun `day 15, part 1`() {
+            assertEquals(656, Day15.part1())
+        }
+
+        @Test
+        @Ignore("Took me an hour to run this one on my machine")
+        fun `day 15, part 2`() {
+            assertEquals(2979, Day15.part2())
         }
     }
 }
