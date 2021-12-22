@@ -11,7 +11,16 @@ data class Pt3D(val x: Int, val y: Int, val z: Int) : Comparable<Pt3D> {
 
     override fun toString(): String = "($x, $y, $z)"
 
-    override fun compareTo(other: Pt3D): Int = manhattan(this, ZERO) - manhattan(other, ZERO)
+    override fun compareTo(other: Pt3D): Int {
+        var cmp = x - other.x
+        if (cmp == 0) {
+            cmp = y - other.y
+            if (cmp == 0) {
+                cmp = z - other.z
+            }
+        }
+        return cmp
+    }
 
     operator fun plus(pt: Pt3D) = Pt3D(x + pt.x, y + pt.y, z + pt.z)
     operator fun minus(pt: Pt3D) = Pt3D(x - pt.x, y - pt.y, z - pt.z)

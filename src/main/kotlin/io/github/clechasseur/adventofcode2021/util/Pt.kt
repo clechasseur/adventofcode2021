@@ -9,7 +9,13 @@ data class Pt(val x: Int, val y: Int) : Comparable<Pt> {
 
     override fun toString(): String = "($x, $y)"
 
-    override fun compareTo(other: Pt): Int = manhattan(this, ZERO) - manhattan(other, ZERO)
+    override fun compareTo(other: Pt): Int {
+        var cmp = x - other.x
+        if (cmp == 0) {
+            cmp = y - other.y
+        }
+        return cmp
+    }
 
     operator fun plus(pt: Pt) = Pt(x + pt.x, y + pt.y)
     operator fun minus(pt: Pt) = Pt(x - pt.x, y - pt.y)
