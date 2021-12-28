@@ -9,7 +9,43 @@ object Day19 {
 
     fun part1(): Int = 0
 
-    private class Scanner(val id: Int, val beacons: List<Pt3D>)
+    private val facings: List<(Pt3D) -> Pt3D> = listOf(
+        { it },
+        { Pt3D(-it.y, it.x, it.z) },
+        { Pt3D(-it.x, -it.y, it.z) },
+        { Pt3D(it.y, -it.x, it.z) },
+    )
+
+    private val rotations: List<(Pt3D) -> Pt3D> = listOf(
+        { it },
+        { Pt3D(it.x, -it.z, it.y) },
+        { Pt3D(it.x, -it.y, -it.z) },
+        { Pt3D(it.x, it.z, -it.y) },
+        { Pt3D(it.z, it.y, -it.x) },
+        { Pt3D(-it.z, it.y, it.x) },
+    )
+
+    private val orientations: List<(Pt3D) -> Pt3D> = facings.flatMap { facing ->
+        rotations.map { rotation -> { rotation(facing(it)) } }
+    }
+
+    private class Scanner(val beacons: List<Pt3D>) {
+        fun allOrientations(): List<Scanner> = orientations.map { orientation ->
+            Scanner(beacons.map { orientation(it) })
+        }
+
+        fun distanceMap(): Set<Pt3D> = beacons.flatMap { b1 ->
+            beacons.filter { it != b1 }.map { b2 ->
+                Pt3D(abs(b1.x - b2.x), abs(b1.y - b2.y), abs(b1.z - b2.z))
+            }
+        }.toSet()
+
+        fun connect(other: Scanner): Scanner? {
+            val leftDm = distanceMap()
+            val right = other.allOrientations().find { leftDm.intersect(it.distanceMap()).size >= 12 } ?: return null
+            
+        }
+    }
 
     private val scannerRegex = """^--- scanner (\d+) ---$""".toRegex()
     private val beaconRegex = """^(-?\d+),(-?\d+),(-?\d+)$""".toRegex()
@@ -18,9 +54,7 @@ object Day19 {
         val it = lines().iterator()
         val scanners = mutableListOf<Scanner>()
         while (it.hasNext()) {
-            val scannerLine = it.next()
-            val scannerMatch = scannerRegex.matchEntire(scannerLine) ?: error("Wrong scanner line: $scannerLine")
-            val id = scannerMatch.groupValues[1].toInt()
+            it.next()
             val beacons = mutableListOf<Pt3D>()
             while (it.hasNext()) {
                 val beaconLine = it.next()
@@ -32,7 +66,7 @@ object Day19 {
                     break
                 }
             }
-            scanners.add(Scanner(id, beacons))
+            scanners.add(Scanner(beacons))
         }
         return scanners
     }
