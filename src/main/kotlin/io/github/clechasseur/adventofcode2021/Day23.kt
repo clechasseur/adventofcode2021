@@ -4,6 +4,7 @@ import io.github.clechasseur.adventofcode2021.dij.Dijkstra
 import io.github.clechasseur.adventofcode2021.dij.Graph
 import io.github.clechasseur.adventofcode2021.util.Direction
 import io.github.clechasseur.adventofcode2021.util.Pt
+import kotlin.math.min
 
 object Day23 {
     private val data = """
@@ -14,7 +15,7 @@ object Day23 {
           #########
     """.trimIndent()
 
-    fun part1(): Int = lowestCost(data.toState(), 0)
+    fun part1(): Int = lowestCost(data.toState())
 
     private val energyCost = mapOf(
         'A' to 1,
@@ -84,22 +85,28 @@ object Day23 {
         line.mapIndexed { x, c -> Pt(x, y) to c }
     }.toMap())
 
-    private fun lowestCost(state: State, costSoFar: Int): Int {
-        if (state.solved) {
-            return costSoFar
-        }
+    private fun lowestCost(initialState: State): Int {
+        var states = mapOf(initialState to 0)
+        while (states.isNotEmpty()) {
+            val newStates = mutableMapOf<State, Int>()
+            states.toList().sortedBy { (_, cost) -> cost }.forEach { (state, costSoFar) ->
+                if (state.solved) {
+                    return costSoFar
+                }
 
-        val newStates = state.amphipods.flatMap { (pos, amphipod) ->
-            val (dist, _) = Dijkstra.build(StateGraph(state, energyCost[amphipod]!!), pos)
-            dist.mapNotNull { (to, cost) ->
-                if (cost > 0 && cost != Long.MAX_VALUE && state.legalMove(pos, to)) {
-                    state.move(pos, to) to cost.toInt()
-                } else null
+                state.amphipods.forEach { (pos, amphipod) ->
+                    val (dist, _) = Dijkstra.build(StateGraph(state, energyCost[amphipod]!!), pos)
+                    dist.forEach { (to, cost) ->
+                        if (cost > 0 && cost != Long.MAX_VALUE && state.legalMove(pos, to)) {
+                            val newState = state.move(pos, to)
+                            val newCost = costSoFar + cost.toInt()
+                            newStates[newState] = min(newStates[newState] ?: Int.MAX_VALUE, newCost)
+                        }
+                    }
+                }
             }
+            states = newStates
         }
-
-        return newStates.minOfOrNull { (newState, cost) ->
-            lowestCost(newState, costSoFar + cost)
-        } ?: Int.MAX_VALUE
+        error("Should have solved by now")
     }
 }

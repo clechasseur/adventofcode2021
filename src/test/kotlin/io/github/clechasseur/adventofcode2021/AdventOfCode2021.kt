@@ -280,8 +280,9 @@ class AdventOfCode2021 {
 
     class Day23Puzzles {
         @Test
+        @Ignore("Took 2.5 min on my machine")
         fun `day 23, part 1`() {
-            assertEquals(0, Day23.part1())
+            assertEquals(14348, Day23.part1())
         }
     }
 }
