@@ -2,6 +2,8 @@ package io.github.clechasseur.adventofcode2021
 
 import io.github.clechasseur.adventofcode2021.data.Day22Data
 import io.github.clechasseur.adventofcode2021.util.Pt3D
+import kotlin.math.max
+import kotlin.math.min
 
 object Day22 {
     private val data = Day22Data.data
@@ -10,20 +12,7 @@ object Day22 {
         core apply cuboid
     }.cubes.size
 
-    fun part2(): Long {
-        val cuboids = data.lines().map { it.toCuboid() }.reversed()
-        val minx = cuboids.minOf { it.xr.first }
-        val maxx = cuboids.maxOf { it.xr.last }
-        val miny = cuboids.minOf { it.yr.first }
-        val maxy = cuboids.maxOf { it.yr.last }
-        val minz = cuboids.minOf { it.zr.first }
-        val maxz = cuboids.maxOf { it.zr.last }
-        return (minx..maxx).asSequence().flatMap { x ->
-            (miny..maxy).asSequence().flatMap { y ->
-                (minz..maxz).asSequence().map { z -> if (cuboids.on(Pt3D(x, y, z))) 1L else 0L }
-            }
-        }.sum()
-    }
+    fun part2(): Long = countOn(data.lines().map { it.toCuboid() })
 
     private class Core(val cubes: Set<Pt3D>)
 
@@ -35,7 +24,8 @@ object Day22 {
                 }
             }.toSet()
 
-        fun contains(pt: Pt3D): Boolean = pt.x in xr && pt.y in yr && pt.z in zr
+        val size: Long
+            get() = xr.size * yr.size * zr.size
     }
 
     private infix fun Core.apply(cuboid: Cuboid): Core = if (cuboid.on) {
@@ -44,7 +34,41 @@ object Day22 {
         Core(cubes - cuboid.cubes)
     }
 
-    private fun List<Cuboid>.on(pt: Pt3D): Boolean = find { it.contains(pt) }?.on ?: false
+    private val IntRange.size: Long
+        get() = (last - first + 1).toLong()
+
+    private infix fun Cuboid.overlap(right: Cuboid): Cuboid? {
+        val maxx = max(xr.first, right.xr.first)
+        val maxy = max(yr.first, right.yr.first)
+        val maxz = max(zr.first, right.zr.first)
+        val minxp = min(xr.last, right.xr.last)
+        val minyp = min(yr.last, right.yr.last)
+        val minzp = min(zr.last, right.zr.last)
+        return if ((minxp - maxx) >= 0 && (minyp - maxy) >= 0 && (minzp - maxz) >= 0) {
+            Cuboid(true, maxx..minxp, maxy..minyp, maxz..minzp)
+        } else null
+    }
+
+    private fun countOn(cuboids: List<Cuboid>): Long {
+        // had help here
+        var on = 0L
+        val counted = mutableListOf<Cuboid>()
+        cuboids.reversed().forEach { cuboid ->
+            if (cuboid.on) {
+                val dead = mutableListOf<Cuboid>()
+                counted.forEach {
+                    val overlap = it overlap cuboid
+                    if (overlap != null) {
+                        dead.add(overlap)
+                    }
+                }
+                on += cuboid.size
+                on -= countOn(dead)
+            }
+            counted.add(cuboid)
+        }
+        return on
+    }
 
     private val cuboidRegex = """^(on|off) x=(-?\d+)\.\.(-?\d+),y=(-?\d+)\.\.(-?\d+),z=(-?\d+)\.\.(-?\d+)$""".toRegex()
 
