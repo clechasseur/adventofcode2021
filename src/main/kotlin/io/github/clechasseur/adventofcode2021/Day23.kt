@@ -7,7 +7,7 @@ import io.github.clechasseur.adventofcode2021.util.Pt
 import kotlin.math.min
 
 object Day23 {
-    private val data = """
+    private val dataPart1 = """
         #############
         #...........#
         ###D#A#D#C###
@@ -15,7 +15,19 @@ object Day23 {
           #########
     """.trimIndent()
 
-    fun part1(): Int = lowestCost(data.toState())
+    private val dataPart2 = """
+        #############
+        #...........#
+        ###D#A#D#C###
+          #D#C#B#A#
+          #D#B#A#C#
+          #B#C#B#A#
+          #########
+    """.trimIndent()
+
+    fun part1(): Int = lowestCost(dataPart1.toState(smallRooms, 5))
+
+    fun part2(): Int = lowestCost(dataPart2.toState(largeRooms, 7))
 
     private val energyCost = mapOf(
         'A' to 1,
@@ -29,11 +41,18 @@ object Day23 {
             amphipod == owners && pts.all { tiles[it]!! in listOf('.', amphipod) }
     }
 
-    private val rooms = listOf(
+    private val smallRooms = listOf(
         Room(listOf(Pt(3, 2), Pt(3, 3)), 'A'),
         Room(listOf(Pt(5, 2), Pt(5, 3)), 'B'),
         Room(listOf(Pt(7, 2), Pt(7, 3)), 'C'),
         Room(listOf(Pt(9, 2), Pt(9, 3)), 'D'),
+    )
+
+    private val largeRooms = listOf(
+        Room(listOf(Pt(3, 2), Pt(3, 3), Pt(3, 4), Pt(3, 5)), 'A'),
+        Room(listOf(Pt(5, 2), Pt(5, 3), Pt(5, 4), Pt(5, 5)), 'B'),
+        Room(listOf(Pt(7, 2), Pt(7, 3), Pt(7, 4), Pt(7, 5)), 'C'),
+        Room(listOf(Pt(9, 2), Pt(9, 3), Pt(9, 4), Pt(9, 5)), 'D'),
     )
 
     private val lava = listOf(
@@ -45,7 +64,7 @@ object Day23 {
 
     private val hallway = (1..11).map { Pt(it, 1) }
 
-    private data class State(val tiles: Map<Pt, Char>) {
+    private data class State(val tiles: Map<Pt, Char>, val rooms: List<Room>, val depth: Int) {
         val amphipods: Map<Pt, Char>
             get() = tiles.filterValues { it.isLetter() }
 
@@ -56,18 +75,18 @@ object Day23 {
 
         fun legalMove(from: Pt, to: Pt): Boolean = !lava.contains(to) && rooms.all { room ->
             (!room.pts.contains(to) || room.legalDestinationFor(tiles[from]!!, tiles)) &&
-                    (!room.pts.contains(from) || room.owners != tiles[from]!!)
+                    (!room.pts.contains(from) || !room.legalDestinationFor(tiles[from]!!, tiles))
         } && (!hallway.contains(from) || !hallway.contains(to))
 
         fun move(from: Pt, to: Pt): State {
             val newTiles = tiles.toMutableMap()
             newTiles[from] = '.'
             newTiles[to] = tiles[from]!!
-            return State(newTiles)
+            return State(newTiles, rooms, depth)
         }
 
         override fun toString(): String {
-            return (0..4).joinToString("\n") { y ->
+            return (0 until depth).joinToString("\n") { y ->
                 (0..12).joinToString("") { x -> (tiles[Pt(x, y)] ?: ' ').toString() }
             }
         }
@@ -81,9 +100,9 @@ object Day23 {
         override fun dist(a: Pt, b: Pt): Long = cost.toLong()
     }
 
-    private fun String.toState() = State(lines().flatMapIndexed { y, line ->
+    private fun String.toState(rooms: List<Room>, depth: Int) = State(lines().flatMapIndexed { y, line ->
         line.mapIndexed { x, c -> Pt(x, y) to c }
-    }.toMap())
+    }.toMap(), rooms, depth)
 
     private fun lowestCost(initialState: State): Int {
         var states = mapOf(initialState to 0)
